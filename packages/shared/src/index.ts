@@ -1,3 +1,3 @@
-export function isObject(boolean){
-  console.log('666677',boolean);
+export function isObject(obj){
+  return obj !== null && typeof obj === 'object';
 }
