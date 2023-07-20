@@ -11,7 +11,7 @@ const proxyMap = new WeakMap();// 使用弱引用来存储 proxy 代理的对象
 export function reactive(target){
   if(!isObject(target))return;
 
-  // 当对象被代理过了 再次进入会走到 get方法 
+  // 巧妙 如果这个对象被代理过了 当上面判断取值的时候会走到这 返回true 证明是被代理过的对象
   if(target[ReactiveFlags.IS_REACTIVE])return target;
 
   // 如果已经代理过了  直接返回

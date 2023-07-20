@@ -14,14 +14,24 @@
     const {effect,reactive} = VueReactivity;
 
     let data = {name:'zf',age:18,address:{name:846}}
-    
+    const state = reactive(data)
     // let data1 = reactive(data)
     // let data2 = reactive(data)
 
-    let data1 = reactive(data)
-    let data2 = reactive(data1)
+    // let data1 = reactive(data)
+    // let data2 = reactive(data1)
     
-    console.log('isQuren',data1,data1 === data2);
+    // console.log('isQuren',data1,data1 === data2);
+    console.log('state',state,state.name);
+    console.log('xxxx',state.name);
+    effect(()=>{
+      state.age = Math.random() //这种情况栈溢出  需要处理
+      app.innerHTML = state.name+ '今年' + state.age
+    })
+
+    // setTimeout(()=>{
+    //   state.age++
+    // })
   </script>
 </body>
 </html>
