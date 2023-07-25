@@ -11,36 +11,45 @@
   <div id="app"></div>
 
   <script>
+    let waiting = false;
     const {effect,reactive} = VueReactivity;
 
     let data = {name:'zf',flag:true,age:18,address:{name:846}}
     const state = reactive(data)
-    // let data1 = reactive(data)
-    // let data2 = reactive(data)
 
-    // let data1 = reactive(data)
-    // let data2 = reactive(data1)
-    
-    // console.log('isQuren',data1,data1 === data2);
-    effect(()=>{
-      // state.age = Math.random() //这种情况栈溢出  需要处理
-      // app.innerHTML = state.name+ '今年' + state.age
-      console.log('render');
-      // 期望的是每次执行effect的时候都清理一次依赖，重新收集
-      app.innerHTML = state.flag ? state.name : state.age;
+    const runner = effect(()=>{
+      app.innerHTML = state.name;
+    },{
+      // 调度如何更新自己决定
+      scheduler(){
+        console.log('run');
+        if(!waiting){
+          waiting = true
+          setTimeout(()=>{
+            runner()
+            waiting = false
+          },1000)
+        }
+      }
     })
-
-    // 分支切换
-    setTimeout(()=>{
-      state.flag = false;
-      setTimeout(()=>{
-        console.log('修改name，原则上不更新');
-        state.name = 'z666'
-      },1000)
-    },1000)
-    // setTimeout(()=>{
-    //   state.age++
+    state.name = '666'
+    state.name = '777'
+    state.name = '888'
+    state.name = '999'
+    
+    // 副作用函数  可见 effectScope()
+    // const runner =effect(()=>{
+    //   app.innerHTML = state.name;
     // })
+    // runner.effect.stop(); // 停止依赖收集
+    // setTimeout(() => {
+    //   // 不会触发页面重新渲染
+    //   state.name = '你好'
+    //   setTimeout(()=>{
+    //     runner() //手动触发
+    //   },2000)
+    // }, 1000);
+    
   </script>
 </body>
 </html>

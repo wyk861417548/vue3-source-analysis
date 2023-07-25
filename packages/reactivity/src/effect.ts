@@ -22,12 +22,11 @@ class ReactiveEffect{
   public deps = [];
 
   // 用户传递的参数也会到this上 this.fn = fn
-  constructor(public fn){}
+  constructor(public fn,public scheduler){}
 
-  run(){   //run 就是执行effect
-    if(!this.active){ //如果是非激活状态 只需要执行函数，不需要进行依赖收集
-      this.fn()
-    }
+ 
+  run(){ //run 就是执行effect
+    if(!this.active)return this.fn();//如果是非激活状态 只需要执行函数，不需要进行依赖收集
 
     // 这里就要依赖收集了，核心就是将当前的 effect 和 稍后的渲染属性关联在一起
     try {
@@ -44,14 +43,26 @@ class ReactiveEffect{
       activeEffect = this.parent
     }
   }
+
+  // 清除Effect的依赖
+  stop(){
+    if(this.active){
+      this.active = false;
+      cleanupEffect(this)
+    }
+  }
 }
 
 // fn() 为什么不直接执行 fn()？是为了创建一个ReactiveEffect来进行扩展fn，为了能够进行依赖收集
-export function effect(fn){
+export function effect(fn,options:any = {}){
   //这里fn可以根据状态变化 重新执行，effect可以嵌套着写
-  const _effect = new ReactiveEffect(fn)
-  
+  const _effect = new ReactiveEffect(fn,options.scheduler)
+ 
   _effect.run() //默认执行
+
+  const runner = _effect.run.bind(_effect)
+  runner.effect = _effect;
+  return runner
 }
 
 /**问题：当嵌套情况（组件就是嵌套的effect），try{}finally{} 执行完毕之后，activeEffect 指向null了
@@ -114,7 +125,13 @@ export function trigger(target,type,key,value,oldValue){
 
     effects.forEach(effect=>{ // 设置新值得时候  找到对应的 effects 循环执行
       // 在执行 effect 的时候 又要执行自己，那么我们需要屏蔽 不要无限调用 比如：effect(()=>{ stage.age = Math.random();app.innerHTML = state.name+ '今年' + state.age})
-      if(effect !== activeEffect) effect.run()
+      if(effect !== activeEffect){
+        if(effect.scheduler){ 
+          effect.scheduler() //如果用户传入的调度函数，执行调度函数
+        }else{
+          effect.run() //否则默认刷新视图
+        }
+      }
     })
   }
   
