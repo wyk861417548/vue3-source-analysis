@@ -13,7 +13,7 @@
   <script>
     const {effect,reactive} = VueReactivity;
 
-    let data = {name:'zf',age:18,address:{name:846}}
+    let data = {name:'zf',flag:true,age:18,address:{name:846}}
     const state = reactive(data)
     // let data1 = reactive(data)
     // let data2 = reactive(data)
@@ -22,13 +22,22 @@
     // let data2 = reactive(data1)
     
     // console.log('isQuren',data1,data1 === data2);
-    console.log('state',state,state.name);
-    console.log('xxxx',state.name);
     effect(()=>{
-      state.age = Math.random() //这种情况栈溢出  需要处理
-      app.innerHTML = state.name+ '今年' + state.age
+      // state.age = Math.random() //这种情况栈溢出  需要处理
+      // app.innerHTML = state.name+ '今年' + state.age
+      console.log('render');
+      // 期望的是每次执行effect的时候都清理一次依赖，重新收集
+      app.innerHTML = state.flag ? state.name : state.age;
     })
 
+    // 分支切换
+    setTimeout(()=>{
+      state.flag = false;
+      setTimeout(()=>{
+        console.log('修改name，原则上不更新');
+        state.name = 'z666'
+      },1000)
+    },1000)
     // setTimeout(()=>{
     //   state.age++
     // })

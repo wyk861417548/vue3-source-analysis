@@ -1,8 +1,23 @@
 export let activeEffect = undefined;
 
+/** 清除Effect的收集 
+ * @param effect 
+ * 问题：当分支切换，不在页面上的属性再次修改的时候，还会执行effect
+ * 解决：期望的是每次执行effect的时候都清理一次依赖，重新收集
+ */
+function cleanupEffect(effect){
+  const {deps} = effect;  //deps 里面装的是 各属性 对应的effect
+  if(deps.length){
+    for (let i = 0; i < deps.length; i++) {
+      deps[i].delete(effect)  //解除effect，重新依赖收集
+    }
+    deps.length = 0;
+  }
+}
+
 class ReactiveEffect{
   // 这里表示在实例上也添加了active属性
-  public active = true; //这个active是激活状态
+  public active = true; //这个effect默认是激活状态
   public parent = null;
   public deps = [];
 
@@ -14,10 +29,15 @@ class ReactiveEffect{
       this.fn()
     }
 
+    // 这里就要依赖收集了，核心就是将当前的 effect 和 稍后的渲染属性关联在一起
     try {
       // 每次执行记住父辈的 activeEffect 这是为了处理effect嵌套情况
       this.parent = activeEffect;
       activeEffect = this;
+      console.log('clean',this);
+      
+      // 这里我们需要在执行用户函数之前将收集的内容清空
+      cleanupEffect(this)
       return this.fn(); //当调用取值操作的时候，就可以获取到这个全局的 activeEffect 了
     } finally {
       // 执行完毕后把 activeEffect 设置为父辈的
@@ -57,13 +77,13 @@ export function effect(fn){
 const targetMap = new WeakMap();   //WeakMap = {对象:Map{name:Set}}
 export function track(target,type,key){
   if(!activeEffect) return;
-
+  
   // ------------- 这里所有的步骤 都是为了创建 WeakMap = {对象:Map{name:Set}} 这种格式 ------- 
   let depsMap = targetMap.get(target); 
   if(!depsMap){
     targetMap.set(target,(depsMap = new Map()))
   }
-
+  
   let dep = depsMap.get(key)
   if(!dep){
     depsMap.set(key,(dep = new Set()))
@@ -86,11 +106,17 @@ export function trigger(target,type,key,value,oldValue){
 
   if(!depsMap)return; //触发的值没在模板中使用过
 
-  const effects = depsMap.get(key) //找到属性对应的 effect
+  let effects = depsMap.get(key) //找到属性对应的 effect
 
-  // 设置新值得时候  找到对应的 effects 循环执行
-  effects && effects.forEach(effect=>{
-    // 在执行 effect 的时候 又要执行自己，那么我们需要屏蔽 不要无限调用 比如：effect(()=>{ stage.age = Math.random();app.innerHTML = state.name+ '今年' + state.age})
-    if(effect !== activeEffect) effect.run()
-  })
+  // 在执行之前 先拷贝一份执行  不要关联引用
+  if(effects){
+    effects = new Set(effects)
+
+    effects.forEach(effect=>{ // 设置新值得时候  找到对应的 effects 循环执行
+      // 在执行 effect 的时候 又要执行自己，那么我们需要屏蔽 不要无限调用 比如：effect(()=>{ stage.age = Math.random();app.innerHTML = state.name+ '今年' + state.age})
+      if(effect !== activeEffect) effect.run()
+    })
+  }
+  
+
 }
