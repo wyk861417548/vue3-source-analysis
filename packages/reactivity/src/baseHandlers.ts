@@ -1,5 +1,6 @@
+import { isObject } from "@vue/shared";
 import { track, trigger } from "./effect";
-import { ReactiveFlags } from "./reactive";
+import { reactive, ReactiveFlags } from "./reactive";
 
 export const mutableHandlers = {
   get(target,key,receiver){
@@ -8,7 +9,12 @@ export const mutableHandlers = {
     
     track(target,'get',key)
 
-    return Reflect.get(target,key,receiver)
+    let res = Reflect.get(target,key,receiver);
+
+    // 深度监听
+    if(isObject(res))return reactive(res)
+
+    return res
   },
   set(target,key,value,receiver){
 

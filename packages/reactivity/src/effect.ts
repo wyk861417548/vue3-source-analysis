@@ -15,7 +15,7 @@ function cleanupEffect(effect){
   }
 }
 
-class ReactiveEffect{
+export class ReactiveEffect{
   // 这里表示在实例上也添加了active属性
   public active = true; //这个effect默认是激活状态
   public parent = null;
@@ -33,7 +33,7 @@ class ReactiveEffect{
       // 每次执行记住父辈的 activeEffect 这是为了处理effect嵌套情况
       this.parent = activeEffect;
       activeEffect = this;
-      console.log('clean',this);
+      // console.log('clean',this,this.fn);
       
       // 这里我们需要在执行用户函数之前将收集的内容清空
       cleanupEffect(this)
@@ -100,17 +100,22 @@ export function track(target,type,key){
     depsMap.set(key,(dep = new Set()))
   }
 
-  let shouldTrack = !dep.has(activeEffect) //去重 防止重复添加
-
-  if(shouldTrack){
-    dep.add(activeEffect)
-
-    activeEffect.deps.push(dep) // 反向记录
-  }
+  trackEffects(dep)
 
   // 单向指的是 属性记录了 effect，反向记录：应该也让 effect 记录它被哪些属性记录过，这样做得好处是为了可以清理
 }
 
+export function trackEffects(dep){
+  if(activeEffect){
+    let shouldTrack = !dep.has(activeEffect) //去重 防止重复添加
+
+    if(shouldTrack){
+      dep.add(activeEffect)
+
+      activeEffect.deps.push(dep) // 反向记录
+    }
+  }
+}
 
 export function trigger(target,type,key,value,oldValue){
   const depsMap = targetMap.get(target)
@@ -121,19 +126,21 @@ export function trigger(target,type,key,value,oldValue){
 
   // 在执行之前 先拷贝一份执行  不要关联引用
   if(effects){
-    effects = new Set(effects)
-
-    effects.forEach(effect=>{ // 设置新值得时候  找到对应的 effects 循环执行
-      // 在执行 effect 的时候 又要执行自己，那么我们需要屏蔽 不要无限调用 比如：effect(()=>{ stage.age = Math.random();app.innerHTML = state.name+ '今年' + state.age})
-      if(effect !== activeEffect){
-        if(effect.scheduler){ 
-          effect.scheduler() //如果用户传入的调度函数，执行调度函数
-        }else{
-          effect.run() //否则默认刷新视图
-        }
-      }
-    })
+    debugger
+    triggerEffects(effects)
   }
-  
+}
 
+export function triggerEffects(effects){
+  effects = new Set(effects)
+  effects.forEach(effect=>{ // 设置新值得时候  找到对应的 effects 循环执行
+    // 在执行 effect 的时候 又要执行自己，那么我们需要屏蔽 不要无限调用 比如：effect(()=>{ stage.age = Math.random();app.innerHTML = state.name+ '今年' + state.age})
+    if(effect !== activeEffect){
+      if(effect.scheduler){ 
+        effect.scheduler() //如果用户传入的调度函数，执行调度函数
+      }else{
+        effect.run() //否则默认刷新视图
+      }
+    }
+  })
 }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>computed</title>
+</head>
+<body>
+  <script src="./reactivity.global.js"></script>
+  <div id="app"></div>
+  <script>
+    // computed： https://cn.vuejs.org/guide/essentials/computed.html
+
+    // 计算属性中有一个缓存标识（dirty 是否是脏值），如果这个依赖有变化 要重新执行get，没有变化就不重新执行get
+    // 计算属性也是一个effect，依赖的属性变化了 会更新effect的值
+  </script>
+  <script>
+    const {effect,reactive,computed} = VueReactivity;
+
+    const state = reactive({firstName:'a',lastName:'b'})
+
+    const fullName = computed(()=>{
+      console.log('runner');
+      return state.firstName + state.lastName
+    })
+
+    effect(()=>{
+      app.innerHTML = fullName.value
+      // app.innerHTML = state.firstName
+    })
+
+    setTimeout(()=>{
+      state.firstName = '朱'
+    },1000)
+  </script>
+</body>
+</html>
