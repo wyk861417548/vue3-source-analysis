@@ -24,3 +24,13 @@ export function reactive(target){
 
   return proxy;
 }
+
+
+/** 检查一个对象是否是由 reactive()或 shallowReactive() 创建的代理。
+ * @param value 
+ * @see {@link https://vuejs.org/api/reactivity-utilities.html#isreactive}
+ * "!!"是一个逻辑运算符的组合，用于将一个值转换为相应的布尔值。它通常用于将一个值显式地转换为布尔值，并返回该布尔值。
+ */
+export function isReactive(value){
+  return !!(value && value[ReactiveFlags.IS_REACTIVE])
+}

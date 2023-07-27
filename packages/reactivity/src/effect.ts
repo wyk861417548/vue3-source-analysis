@@ -126,7 +126,6 @@ export function trigger(target,type,key,value,oldValue){
 
   // 在执行之前 先拷贝一份执行  不要关联引用
   if(effects){
-    debugger
     triggerEffects(effects)
   }
 }

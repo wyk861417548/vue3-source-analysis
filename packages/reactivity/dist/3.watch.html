@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>watch</title>
+</head>
+<body>
+  <script src="./reactivity.global.js"></script>
+  <div id="app"></div>
+
+  <script>
+    const {effect,reactive,watch} = VueReactivity;
+    const state = reactive({firstName:'a',lastName:'b',age:0,address:{a:1}})
+
+    let i = 2000;
+    
+    function getData(timer){
+      return new Promise((res,rej)=>{
+        setTimeout(()=>{
+          res(timer)
+        },timer)
+      })
+    }
+
+    //onCleanup：副作用清除 https://cn.vuejs.org/api/reactivity-core.html#watch
+    watch(()=>state.age,async function(newVal,oldVal,onCleanup){
+      let clear = false;
+      onCleanup(()=>{
+        clear = true
+      })
+      console.log('clear----',clear);
+      i-=1000;
+      let r = await getData(i) //第一次执行1s后渲染1000 第二次执行0s后渲染0
+      if(!clear)app.innerHTML = r;
+    },{flush:'sync'})
+
+    state.age = 1;
+    state.age = 2;
+  </script>
+
+  <!-- <script>
+    const {effect,reactive,watch} = VueReactivity;
+
+    const state = reactive({firstName:'a',lastName:'b',address:{a:1}})
+
+    watch(()=>state.firstName,function(newVal,oldVal){
+      console.log('值变化了',newVal,oldVal);
+    })
+
+    setTimeout(() => {
+      state.firstName = '666';
+    }, 1000);
+  </script> -->
+</body>
+</html>

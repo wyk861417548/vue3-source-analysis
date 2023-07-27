@@ -30,3 +30,19 @@
         - effect.run()会触发属性的get方法,触发track，创建一个WeakMap对象（WeakMap = {对象:Map{name:Set}}），属性 记录当前的计算属性的ReactiveEffect，同时计算属性反向记录dep（即WeakMap中Set）
   - 3.如果计算属性依赖属性变化，会触发属性的set方法，查找对应计算属性的effect，找到effect全部执行，然后计算属性执行triggerEffects（如果外层还有收集的effect或者computed那就接着执行）
 ```
+
+#### watch
+###### 核心：effect + 收集
+```
+  watch(sources,cb,options)函数
+    - sources：不管是对象还是函数 getter 最终是 ()=>sources 
+      - 对象：如果是对象，那么调用traverse递归遍历对象上的属性，触发属性的get方法进行依赖收集
+      - 函数：会在首次oldValue = effect.run()执行的时候，执行该函数，从而触发属性的get方法进行依赖收集
+    - cb：函数的回调
+    - options：配置项
+  思路：
+    - 1.传入sources参数，判断是对象还是函数，最终赋值给变量getter（不管是对象还是函数 getter 最终是 ()=>sources）
+    - 2.创建watch的effect（ReactiveEffect(getter,job)），并首次调用一次effect.run，执行getter，如果sources是函数，那么监听的属性是在这里触发get从而进行收集当前的watch effect
+    - 3.创建job函数，作为effect的调度函数，当属性变化的时候，触发属性get，调用trigger方法，去查找对应的effect，找到了watch 的effect并执行，执行调度函数（即创建watch effect是传入的job）
+    - 4.创建onCleanup副作用函数，放入job函数中，当下次watch触发的时候，执行一次
+```
