@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>watch</title>
+</head>
+<body>
+  <script src="./reactivity.global.js"></script>
+  <div id="app"></div>
+
+  <script>
+    const {effect,reactive,ref,toRefs,toRef,proxyRefs} = VueReactivity;
+
+    //---------------ref start---------------
+
+    // const name = ref('李逵')
+    // const ages = ref('30')
+    // const info = proxyRefs({name,ages})
+    // effect(()=>{
+    //   app.innerHTML =info.name + '今年' + ages.value;
+    // })
+
+    // setTimeout(()=>{
+    //   ages.value = '35'
+    // },1000)
+
+    //---------------ref end---------------
+
+    //---------------toRef && toRefs start---------------
+
+    const state = reactive({firstName:'李',lastName:'大壮',age:0,address:{a:1}})
+
+    const {age} = toRefs(state)
+    const firstName = toRef(state,'firstName')
+    const lastName = toRef(state,'lastName')
+
+    console.log('firstName',firstName,lastName);
+
+    effect(()=>{
+      app.innerHTML = firstName.value + lastName.value + '，今年',age.value;
+    })
+    
+
+    setTimeout(() => {
+      age.value = '吴'
+    }, 1000);
+
+    //---------------toRef && toRefs start---------------
+  </script>
+
+  
+
+</body>
+</html>

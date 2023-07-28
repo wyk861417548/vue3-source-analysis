@@ -34,3 +34,12 @@ export function reactive(target){
 export function isReactive(value){
   return !!(value && value[ReactiveFlags.IS_REACTIVE])
 }
+
+/**
+ * 检查是否是对象 如果是对象那么使用reactive代理，否则直接返回值
+ * @param value 
+ * @returns 
+ */
+export function toReactive(value){
+  return isObject(value)?reactive(value):value;
+}

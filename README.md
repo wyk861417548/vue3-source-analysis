@@ -46,3 +46,17 @@
     - 3.创建job函数，作为effect的调度函数，当属性变化的时候，触发属性get，调用trigger方法，去查找对应的effect，找到了watch 的effect并执行，执行调度函数（即创建watch effect是传入的job）
     - 4.创建onCleanup副作用函数，放入job函数中，当下次watch触发的时候，执行一次
 ```
+
+#### ref
+```
+  核心：
+  1.实例RefImpl类，传入目标target，如果是对象那么用reactive代理这个对象，否则直接返回值
+  2.实现get value：在此处进行依赖收集
+  3.实现set value：设置ref的新值，并触发收集的依赖effect，进行更新
+```
+
+#### toRef 和 toRefs
+###### 只是做了一个简单代理而已（将.value属性代理到原始对象上）
+
+#### proxyRefs（反向代理ref）
+###### 将ref代理的对象用对象包裹一层，在用proxy进行反向代理而已
